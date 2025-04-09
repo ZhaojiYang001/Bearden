@@ -1,14 +1,9 @@
-# Imports from the python standard library:
 import ctypes as C
 import os
 import time
 import numpy as np
 
 class Spectrometer:
-    '''
-    Basic device adaptor for Thorlabs CCS100 compact spectrometer, 350-700nm.
-    Many more commands are available and have not been implemented.
-    '''
     def __init__(self,
                  serial_number,
                  name='CCS100',
@@ -229,21 +224,9 @@ class Spectrometer:
 os.add_dll_directory(os.getcwd())
 dll = C.cdll.LoadLibrary("TLCCS_64.dll") # needs "TLCCS_64.dll" in directory
 
-## -> function 'tlccs_errorMessage' not found:
-
-##dll.get_error_message = dll.tlccs_errorMessage
-##dll.get_error_message.argtypes = [
-##    C.c_uint32,                 # instrumentHandle
-##    C.c_uint32,                 # statusCode
-##    C.c_char_p]                 # description[]
-##dll.get_error_message.restype = C.c_uint32
-
 def check_error(error_code):
     if error_code != 0:
         print("Error message from Thorlabs CCS100: ", end='')
-##        error_message = (512 * C.c_char)()
-##        dll.get_error_message(0, error_code, error_message)
-##        print(error_message.value.decode('ascii'))
         raise UserWarning(
             "Thorlabs CCS100 error: %i; see above for details."%(error_code))
     return error_code
@@ -323,13 +306,5 @@ if __name__ == '__main__':
     spec.get_spectrum(filename=filename)
     sample_data = spec.scan_data - background
     spec.plot_spectrum(scan_data=sample_data, show=False, filename=filename)
-
-##    print('\n# Background removal:')
-##    wave, background = spec.get_spectrum(filename='background')
-##    input('-> add sample and hit "ENTER"')
-##    wave, sample = spec.get_spectrum(filename='sample')
-##    # remove background and plot:
-##    delta = np.asarray(sample) - np.asarray(background)
-##    spec.plot_spectrum(wave, delta, filename='sample_background_removed')
 
     spec.close()
