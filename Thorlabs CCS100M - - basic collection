@@ -1,7 +1,6 @@
 import ctypes as C
 import os
 import time
-import numpy as np
 
 class Spectrometer:
     def __init__(self,
@@ -10,8 +9,7 @@ class Spectrometer:
                  reset=True,
                  verbose=True,
                  very_verbose=True):
-        self.scan_data = None
-        self.background_data = None # initialize，avoid AttributeError
+        self.scan_data = None  # initialize，avoid AttributeError
         self.name = name
         self.verbose = verbose
         self.very_verbose = very_verbose
@@ -98,7 +96,7 @@ class Spectrometer:
             print("%s: getting scan data"%self.name)
         scan_data = (3648 * C.c_double)()
         dll.get_scan_data(self.handle, scan_data)
-        self.scan_data =  np.array(scan_data)
+        self.scan_data =  tuple(scan_data)
         if self.very_verbose:
             print("%s: -> done getting scan data."%self.name)
         return self.scan_data
@@ -134,10 +132,10 @@ class Spectrometer:
 
     def get_spectrum(self, filename=None):
         if self.verbose:
-            print("%s: getting spectrum" % self.name)
+            print("%s: getting spectrum"%self.name)
         self._get_status()
 
-        # Sometimes, for some special cases, like if you interrupt the scanning process when CCS100 is running, you need to reset the equipment, otherwise it will report error
+        #Sometimes, for some special cases, like if you interrupt the scanning process when CCS100 is running, you need to reset the equipment, otherwise it will report error
         retry_count = 5
         wait_time = 2
 
@@ -158,24 +156,25 @@ class Spectrometer:
             return None
 
         self._start_scan()
+
         if self.verbose:
-            print("%s: -> waiting for scan..." % self.name, end='')
+            print("%s: -> waiting for scan..."%self.name, end='')
         while not self.status_scan_ready:
             if self.verbose:
                 print(".", end='')
             time.sleep(self.integration_time_s / 10)
             self._get_status()
         if self.verbose:
-            print("\n%s: -> scan ready" % self.name)
+            print("\n%s: -> scan ready"%self.name)
         self._get_scan_data()
         if self.very_verbose:
-            print("%s: -> done getting spectrum." % self.name)
+            print("%s: -> done getting spectrum."%self.name)
         if filename is not None:
             if self.verbose:
-                print("%s: saving spectrum (%s)" % (self.name, filename))
+                print("%s: saving spectrum (%s)"%(self.name, filename))
             with open(filename + '.txt', 'w') as file:
                 for wave, data in zip(self.wavelength_data, self.scan_data):
-                    file.write('%0.3f' % wave + ':' + str(data) + '\n')
+                    file.write('%0.3f'%wave + ':' + str(data) + '\n')
         return self.wavelength_data, self.scan_data
 
     def plot_spectrum(self,
@@ -207,7 +206,7 @@ class Spectrometer:
         if filename is not None:
             if self.verbose:
                 print("%s: saving plot (%s)"%(self.name, filename))
-            fig.savefig(filename, dpi=600)
+            fig.savefig(filename, dpi=150)
         plt.close(fig)
         if self.verbose:
             print("%s: -> done plotting spectrum."%self.name)
@@ -218,8 +217,6 @@ class Spectrometer:
         dll.close(self.handle)
         if self.verbose: print(" done.")
         return None
-
-### Tidy and store DLL calls away from main program:
 
 os.add_dll_directory(os.getcwd())
 dll = C.cdll.LoadLibrary("TLCCS_64.dll") # needs "TLCCS_64.dll" in directory
@@ -298,13 +295,15 @@ if __name__ == '__main__':
         serial_number="M01216839", verbose=True, very_verbose=False)
 
     print('\n# Set integration time:')
-    spec.set_integration_time(1)
-    wave, background = spec.get_spectrum()
+    spec.set_integration_time(0.2)
 
-    print('\n# Scan and saving:')
-    filename = 'example'
+    print('\n# Scan and plot:')
+    spec.get_spectrum()
+    spec.plot_spectrum()
+
+    print('\n# Saving:')
+    filename='example'
     spec.get_spectrum(filename=filename)
-    sample_data = spec.scan_data - background
-    spec.plot_spectrum(scan_data=sample_data, show=False, filename=filename)
+    spec.plot_spectrum(show=False, filename=filename)
 
     spec.close()
