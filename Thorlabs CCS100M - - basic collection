@@ -199,6 +199,9 @@ class Spectrometer:
         ax.set_ylabel('Intensity (a.u.)')
         ax.set_xlabel('Wavelength (nm)')
         ax.plot(wavelength_data, scan_data)
+        ax.grid(True)
+        ax.set_ylim(-1, 1)
+        ax.set_xlim(min(wavelength_data), max(wavelength_data))
         if show:
             if self.verbose:
                 print("%s: showing plot (matplotlib window)"%self.name)
