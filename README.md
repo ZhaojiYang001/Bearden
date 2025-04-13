@@ -1,4 +1,5 @@
 This is a program to use python code to control Thorlabs CCS100/M UV-Vis spectrometer (350nm-700nm) to collect data and draw the plot.
+
 Tips:
 1. Before you run the python code, make sure put the API file "TLCCS_64.dll" in the same directory with your python file.
 2. Please download and install the Thorlabs official software "ThorSpectra" must before you first connect the spectrometer to your PC. You can find it from the following link: https://www.thorlabs.com/software_pages/viewsoftwarepage.cfm?code=CCS
